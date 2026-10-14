@@ -253,6 +253,17 @@ p{margin:0}
 .vista .lens b{display:block;color:var(--bone);font-family:var(--f-display);font-weight:400;font-size:17px}
 
 /* ---------- Voice: lore player ---------- */
+.voice{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-radius:12px;overflow:hidden;border:1px solid var(--line-2);background:var(--veil)}
+@media(max-width:860px){.voice{grid-template-columns:1fr}}
+.voice-pic{min-height:320px;background-size:cover;background-position:center}
+.voice-txt{padding:clamp(22px,3vw,40px);display:grid;gap:14px;align-content:center}
+.voice-txt .act-mark{margin-bottom:0}
+.voice-list{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:12px}
+.voice-list li{font-size:15.5px;color:var(--mist);padding-left:18px;position:relative}
+.voice-list li::before{content:"◆";position:absolute;left:0;top:2px;color:var(--gold);font-size:10px}
+.voice-list b{display:block;color:var(--bone);font-weight:500}
+.voice-langs{display:flex;gap:8px;flex-wrap:wrap}
+.voice-langs span{font-family:var(--f-mono);font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,210,122,.45);color:var(--dawn)}
 .player{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);border-radius:10px;overflow:hidden;border:1px solid var(--line-2);background:var(--veil)}
 @media(max-width:860px){.player{grid-template-columns:1fr}}
 .player .pic{min-height:300px;background-size:cover;background-position:center;position:relative}
@@ -676,19 +687,18 @@ footer b{color:var(--bone);font-weight:500}
 <!-- VOICE -->
 <section class="band" id="voice" data-act="Embervale Speaks">
   <div class="wrap">
-    <div class="stack rv" style="max-width:62ch;margin-bottom:30px">
-      <div class="act-mark"><span class="rn">VII</span><span class="eyebrow">Fully voiced</span></div>
-      <h2 class="h-sec">Hey, listen</h2>
-      <p class="muted">Every lore note, letter and book is voiced in English, German and Mandarin Chinese. Queue them up and keep exploring like it is an audiobook. Crafting survivors and major quest-givers finally speak too.</p>
-    </div>
-    <div class="player rv" id="player">
-      <div class="pic" style="background-image:var(--i-camp)" role="img" aria-label="Two adventurers at a campfire under a full moon"></div>
-      <div class="q">
-        <div class="now"><span class="eyebrow" style="color:var(--gold)">Now playing</span><span class="ttl" id="nowT">A letter found near Longkeep</span></div>
-        <div class="wave" id="wave" aria-hidden="true"></div>
-        <div class="ctrl"><button id="playBtn" type="button" aria-label="Play"><svg width="16" height="16" viewBox="0 0 24 24" id="playIco"><path d="M7 4l13 8-13 8z"/></svg></button><span class="note-sm" id="ptime">0:00 / 2:14</span><div class="langs"><span>EN</span><span>DE</span><span>中文</span></div></div>
-        <ol class="queue" id="queue"></ol>
-        <p class="note-sm">Illustration of the playlist feature. Titles are placeholders, not real in-game notes.</p>
+    <div class="voice rv">
+      <div class="voice-pic" style="background-image:var(--i-camp)" role="img" aria-label="Two adventurers at a campfire under a full moon"></div>
+      <div class="voice-txt">
+        <div class="act-mark"><span class="rn">VII</span><span class="eyebrow">Fully voiced</span></div>
+        <h2 class="h-sec">Hey, listen</h2>
+        <p class="muted">Embervale finally speaks. Survivors have more to say than just “oi”.</p>
+        <ul class="voice-list">
+          <li><b>Every lore text</b>Notes, letters and books are all voiced.</li>
+          <li><b>Audiobook mode</b>Keep exploring while they play, or queue several as a playlist.</li>
+          <li><b>Survivors talk</b>Crafting survivors and major quest-givers are voiced too.</li>
+        </ul>
+        <div class="voice-langs"><span>English</span><span>Deutsch</span><span>中文</span></div>
       </div>
     </div>
   </div>
@@ -974,17 +984,6 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
   inner.addEventListener('pointermove',e=>{if(!drag)return;const n=N[drag.k];n.x=Math.max(0,Math.min(860-126,e.clientX/sc-drag.ox));n.y=Math.max(0,Math.min(420-70,e.clientY/sc-drag.oy));n.el.style.left=n.x+'px';n.el.style.top=n.y+'px';wires()});
   inner.addEventListener('pointerup',()=>drag=null);inner.addEventListener('pointercancel',()=>drag=null);
   render();
-})();
-
-/* ======= Lore player ======= */
-(function(){
-  const Q=[['A letter found near Longkeep','2:14'],['Journal of a Flame acolyte','3:02'],['Notes on the lifted isles','1:47'],['The last Ancient ledger','4:20']];
-  const wave=$('#wave');wave.innerHTML=Array.from({length:48},(_,i)=>`<i style="--h:${(.25+Math.abs(Math.sin(i*1.7))*.75).toFixed(2)};--d:${(i%7)*-.13}s"></i>`).join('');
-  let cur=0,playing=false,sec=0,tm=null;const q=$('#queue');
-  function draw(){q.innerHTML=Q.map((x,i)=>`<li class="${i===cur?'cur':''}" data-i="${i}"><span style="color:inherit;font-family:var(--f-body);font-size:14.5px">${i+1}. ${x[0]}</span><span>${x[1]}</span></li>`).join('');$('#nowT').textContent=Q[cur][0];$('#ptime').textContent=`${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')} / ${Q[cur][1]}`}
-  q.onclick=e=>{const li=e.target.closest('li');if(!li)return;cur=+li.dataset.i;sec=0;draw()};
-  $('#playBtn').onclick=()=>{playing=!playing;$('#player').classList.toggle('playing',playing);$('#playIco').innerHTML=playing?'<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>':'<path d="M7 4l13 8-13 8z"/>';$('#playBtn').setAttribute('aria-label',playing?'Pause':'Play');clearInterval(tm);if(playing)tm=setInterval(()=>{sec++;draw()},1000)};
-  draw();
 })();
 
 /* ======= QoL ======= */
