@@ -801,7 +801,10 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* Real video files and YouTube players load when the page is hosted anywhere but a Claude artifact (whose sandbox blocks them). Frame loops stay underneath as a fallback. */
 const HOSTED=!/claude|anthropic/i.test(location.hostname);
 const STEAM='https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1203620/extras/';
-function mkVid(src){const v=document.createElement('video');v.muted=true;v.loop=true;v.autoplay=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='metadata';v.className='rv-vid';v.src=src;v.addEventListener('error',()=>v.remove());v.addEventListener('playing',()=>v.classList.add('on'));return v}
+function mkVid(src){const v=document.createElement('video');v.muted=true;v.loop=true;v.autoplay=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='metadata';v.className='rv-vid';v.src=src;v.addEventListener('error',()=>v.remove());v.addEventListener('playing',()=>v.classList.add('on'));
+  const go=()=>{const p=v.play();if(p&&p.catch)p.catch(()=>{})};v.addEventListener('canplay',go);v.addEventListener('loadeddata',go);
+  if('IntersectionObserver'in window){new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)go();else v.pause()})},{threshold:.15}).observe(v)}
+  setTimeout(go,0);return v}
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -1135,7 +1138,7 @@ const NOTES=[
 /* ======= Reel ======= */
 (function(){
   const V=[['gp7PZXkyxxY','Launch Trailer','The 1.0 trailer, out a day early.','var(--i-jungle)'],['ur4YY4Bt8IU','Introducing Sparkworks','Logic, traps and player-made adventures.','var(--i-graph)'],['4AQycxtpPno','Performance for 1.0','The renderer, memory and shaders.','var(--i-vista)'],['WZBpAILoao4',"Things we're fixing",'Bosses, traversal and community fixes.','var(--i-beast)']];
-  if(HOSTED&&!reduce)$('#foesV').append(mkVid(STEAM+'6ed7eaf2babfa18010024e55fbecab1e.webm'));
+  if(HOSTED)$('#foesV').append(mkVid(STEAM+'6ed7eaf2babfa18010024e55fbecab1e.webm'));
   $('#reelGrid').innerHTML=V.map(([id,t,d,img])=>`<a class="vid" data-yt="${id}" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener"><div class="th" style="background-image:${img}"><span class="play"><i></i></span></div><div class="m"><b>${t}</b><span>${d}</span></div></a>`).join('');
   if(HOSTED&&location.protocol!=='file:')$('#reelGrid').addEventListener('click',e=>{const a=e.target.closest('.vid');if(!a)return;e.preventDefault();const th=a.querySelector('.th');if(th.querySelector('iframe'))return;const f=document.createElement('iframe');f.src='https://www.youtube-nocookie.com/embed/'+a.dataset.yt+'?autoplay=1&rel=0';f.title=a.querySelector('b').textContent;f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';f.allowFullscreen=true;th.append(f)});
 })();
@@ -1262,7 +1265,7 @@ const NOTES=[
   $('#pathPick').innerHTML=keys.map(k=>`<button class="pp" role="tab" type="button" data-k="${k}" style="--c:${P[k].c}"><svg viewBox="0 0 24 24" aria-hidden="true">${SIG[k]}</svg><b>${P[k].n}</b></button>`).join('');
   let curK='mage';
   function show(k,m){const p=P[k],it=p.media[m];const main=$('#pmMain');main.style.backgroundImage=it.bg;main.setAttribute('aria-label',it.cap);
-    main.querySelectorAll('video').forEach(v=>v.remove());if(HOSTED&&it.vid&&!reduce)main.prepend(mkVid(it.vid));
+    main.querySelectorAll('video').forEach(v=>v.remove());if(HOSTED&&it.vid)main.prepend(mkVid(it.vid));
     const b=$('#pmBadge');b.className='pm-badge'+(it.wip?' wip':'');b.innerHTML=it.wip?'<i></i>WIP clip · Keen Games':'Screenshot';$('#pmCap').textContent=it.cap;
     $$('.pm-t').forEach((t,i)=>t.setAttribute('aria-selected',i===m))}
   function pick(k){const p=P[k];$$('.pp').forEach(b=>b.setAttribute('aria-selected',b.dataset.k===k));const st=$('#pathStage');st.style.setProperty('--c',p.c);
